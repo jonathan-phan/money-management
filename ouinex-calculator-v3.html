@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ouinex — Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=IBM+Plex+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #06080f;
+    --panel: #0d1117;
+    --border: #1c2333;
+    --green: #00e676;
+    --green-dim: rgba(0,230,118,0.07);
+    --red: #ff3d57;
+    --red-dim: rgba(255,61,87,0.07);
+    --yellow: #ffc107;
+    --blue: #4fc3f7;
+    --text: #cdd6f4;
+    --muted: #4a5568;
+    --muted2: #718096;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    min-height: 100vh;
+    padding: 20px 16px 60px;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  /* Header */
+  .header {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 24px; padding-bottom: 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo {
+    width: 34px; height: 34px; background: var(--green);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 13px; color: #000;
+    flex-shrink: 0;
+  }
+  .header h1 { font-size: 15px; font-weight: 700; color: #fff; }
+  .header p { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--muted2); margin-top: 2px; letter-spacing: 1px; }
+  .badge {
+    margin-left: auto; font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px; color: var(--green); border: 1px solid var(--green);
+    padding: 3px 7px; letter-spacing: 1px; white-space: nowrap;
+  }
+
+  /* Sections */
+  .section { margin-bottom: 20px; }
+  .section-title {
+    font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+    color: var(--muted); letter-spacing: 2px; text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  /* Input grid */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field.full { grid-column: 1/-1; }
+
+  label {
+    font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+    color: var(--muted2); letter-spacing: 1px; text-transform: uppercase;
+  }
+
+  input[type="number"], input[type="text"] {
+    background: var(--panel); border: 1px solid var(--border);
+    color: #fff; font-family: 'IBM Plex Mono', monospace;
+    font-size: 20px; font-weight: 500; padding: 11px 12px;
+    outline: none; width: 100%;
+    transition: border-color 0.15s;
+    -moz-appearance: textfield;
+  }
+  input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+  input[type="number"]:focus, input[type="text"]:focus { border-color: var(--green); }
+
+  .hint { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); margin-top: 3px; }
+
+  /* Slider */
+  .slider-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .slider-val { font-family: 'IBM Plex Mono', monospace; font-size: 20px; font-weight: 700; color: var(--green); }
+
+  input[type="range"] {
+    width: 100%; height: 3px; -webkit-appearance: none;
+    background: var(--border); outline: none; cursor: pointer; margin-bottom: 4px;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 18px; height: 18px; background: var(--green); cursor: pointer;
+  }
+
+  .risk-labels {
+    display: flex; justify-content: space-between;
+    font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+  }
+
+  /* Divider */
+  .divider { height: 1px; background: var(--border); margin: 18px 0; }
+
+  /* Result principal */
+  .result-main-box {
+    background: var(--panel); border: 1px solid var(--border);
+    padding: 18px; margin-bottom: 10px;
+    position: relative; overflow: hidden;
+  }
+  .result-main-box::before {
+    content: ''; position: absolute; top: 0; left: 0;
+    width: 100%; height: 3px; background: var(--green);
+  }
+  .res-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--muted2); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
+  .res-big { font-family: 'IBM Plex Mono', monospace; font-size: 48px; font-weight: 700; color: var(--green); line-height: 1; }
+  .res-big.warn { color: var(--yellow); }
+  .res-big.danger { color: var(--red); }
+  .res-sub { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted2); margin-top: 5px; }
+
+  /* Stats */
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .stat { background: var(--panel); border: 1px solid var(--border); padding: 12px; }
+  .stat-l { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 5px; }
+  .stat-v { font-family: 'IBM Plex Mono', monospace; font-size: 17px; font-weight: 700; color: #fff; }
+  .stat-v.g { color: var(--green); }
+  .stat-v.r { color: var(--red); }
+  .stat-v.y { color: var(--yellow); }
+
+  /* Alert */
+  .alert {
+    border: 1px solid var(--red); background: var(--red-dim);
+    padding: 10px 12px; font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px; color: var(--red); line-height: 1.7;
+    display: none; margin-bottom: 10px;
+  }
+  .alert.show { display: block; }
+
+  /* Cheat table */
+  table { width: 100%; border-collapse: collapse; font-family: 'IBM Plex Mono', monospace; font-size: 11px; }
+  th { text-align: left; padding: 7px 10px; color: var(--muted); border-bottom: 1px solid var(--border); font-size: 9px; letter-spacing: 1px; text-transform: uppercase; }
+  td { padding: 9px 10px; border-bottom: 1px solid rgba(28,35,51,0.4); }
+  tr:last-child td { border-bottom: none; }
+  .tg { color: var(--green); }
+  .ty { color: var(--yellow); }
+  .tr { color: var(--red); }
+
+  .note {
+    font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--muted);
+    line-height: 1.8; padding: 12px; border: 1px solid var(--border); background: var(--panel);
+    margin-top: 10px;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">OX</div>
+  <div>
+    <h1>Position Calculator</h1>
+    <p>OUINEX · 1 USDT/PT/LOT · TOUS INDICES</p>
+  </div>
+  <div class="badge">V3</div>
+</div>
+
+<!-- Capital & risque -->
+<div class="section">
+  <div class="section-title">// Compte</div>
+  <div class="grid2">
+    <div class="field full">
+      <label>Capital (USDT)</label>
+      <input type="number" id="capital" value="1000" min="1" oninput="calc()">
+    </div>
+  </div>
+  <div style="margin-top:12px;">
+    <div class="slider-row">
+      <label>Risque par trade</label>
+      <div class="slider-val" id="riskDisplay">1.0%</div>
+    </div>
+    <input type="range" id="riskSlider" min="0.1" max="5" step="0.1" value="1" oninput="syncRisk()">
+    <div class="risk-labels">
+      <span style="color:var(--green)">0.1%</span>
+      <span style="color:var(--yellow)">2%</span>
+      <span style="color:var(--red)">5%</span>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- Trade -->
+<div class="section">
+  <div class="section-title">// Trade</div>
+  <div class="grid2">
+    <div class="field">
+      <label>Stop-Loss (pts)</label>
+      <input type="number" id="sl" value="50" min="0.1" step="0.1" oninput="calc()">
+      <div class="hint" id="slHint">= — $</div>
+    </div>
+    <div class="field">
+      <label>Take-Profit (pts)</label>
+      <input type="number" id="tp" value="100" min="0.1" step="0.1" oninput="calc()">
+      <div class="hint" id="tpHint">= — $</div>
+    </div>
+    <div class="field">
+      <label>Win Rate (%)</label>
+      <input type="number" id="wr" value="50" min="1" max="99" oninput="calc()">
+    </div>
+    <div class="field">
+      <label>Nb trades sim.</label>
+      <input type="number" id="nb" value="100" min="1" oninput="calc()">
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- Résultat -->
+<div class="result-main-box">
+  <div class="res-label">TAILLE DE POSITION</div>
+  <div class="res-big" id="posRes">—</div>
+  <div class="res-sub" id="posSub">lots à entrer dans Ouinex</div>
+</div>
+
+<div class="stats">
+  <div class="stat">
+    <div class="stat-l">Risque $</div>
+    <div class="stat-v" id="sRisk">—</div>
+  </div>
+  <div class="stat">
+    <div class="stat-l">Gain si TP</div>
+    <div class="stat-v g" id="sGain">—</div>
+  </div>
+  <div class="stat">
+    <div class="stat-l">Ratio R:R</div>
+    <div class="stat-v" id="sRR">—</div>
+  </div>
+  <div class="stat">
+    <div class="stat-l">Break-even WR</div>
+    <div class="stat-v" id="sBE">—</div>
+  </div>
+  <div class="stat">
+    <div class="stat-l">Espérance/trade</div>
+    <div class="stat-v" id="sExp">—</div>
+  </div>
+  <div class="stat">
+    <div class="stat-l">Profit N trades</div>
+    <div class="stat-v" id="sProj">—</div>
+  </div>
+</div>
+
+<div class="alert" id="alertBox"></div>
+
+<div class="divider"></div>
+
+<!-- Cheat sheet -->
+<div class="section-title">// Cheat sheet — lots selon SL</div>
+<div style="background:var(--panel); border:1px solid var(--border); margin-bottom:12px;">
+  <table>
+    <thead>
+      <tr>
+        <th>SL (pts)</th>
+        <th class="tg">0.5%</th>
+        <th class="ty">1%</th>
+        <th class="tr">2%</th>
+      </tr>
+    </thead>
+    <tbody id="cheatBody"></tbody>
+  </table>
+</div>
+
+<div class="note">
+  ✓ Tick value vérifié sur trade réel : 1 USDT/point/lot<br>
+  ✓ Valable GER40 · SP500 · CAC40 · tous indices Ouinex<br>
+  ⚠ Risque conseillé : 0.5%–1% par trade max
+</div>
+
+<script>
+const TICK = 1; // 1 USDT par point par lot — vérifié
+
+function syncRisk() {
+  const v = parseFloat(document.getElementById('riskSlider').value);
+  const el = document.getElementById('riskDisplay');
+  el.textContent = v.toFixed(1) + '%';
+  el.style.color = v <= 1 ? 'var(--green)' : v <= 2 ? 'var(--yellow)' : 'var(--red)';
+  calc();
+}
+
+function calc() {
+  const capital = parseFloat(document.getElementById('capital').value) || 0;
+  const sl      = parseFloat(document.getElementById('sl').value) || 0;
+  const tp      = parseFloat(document.getElementById('tp').value) || 0;
+  const wr      = parseFloat(document.getElementById('wr').value) / 100 || 0.5;
+  const nb      = parseInt(document.getElementById('nb').value) || 100;
+  const riskPct = parseFloat(document.getElementById('riskSlider').value) / 100;
+
+  const riskAmt = capital * riskPct;
+  const lots    = sl > 0 ? riskAmt / (sl * TICK) : 0;
+  const gainAmt = lots * tp * TICK;
+  const rr      = riskAmt > 0 && gainAmt > 0 ? gainAmt / riskAmt : 0;
+  const beWR    = rr > 0 ? 1 / (1 + rr) : 0;
+  const exp     = wr * gainAmt - (1 - wr) * riskAmt;
+  const proj    = exp * nb;
+
+  // Hints SL/TP en $
+  document.getElementById('slHint').textContent = sl > 0 && lots > 0 ? '= ' + f(lots * sl * TICK) + ' $' : '= — $';
+  document.getElementById('tpHint').textContent = tp > 0 && lots > 0 ? '= ' + f(lots * tp * TICK) + ' $' : '= — $';
+
+  // Résultat principal
+  const posEl = document.getElementById('posRes');
+  posEl.textContent = lots > 0 ? lots.toFixed(2) : '—';
+  posEl.className = 'res-big' + (riskPct*100 > 3 ? ' danger' : riskPct*100 > 2 ? ' warn' : '');
+  document.getElementById('posSub').textContent = lots > 0
+    ? `lots · risque réel : ${f(lots * sl * TICK)}$`
+    : 'lots à entrer dans Ouinex';
+
+  // Stats
+  set('sRisk', riskAmt > 0 ? f(riskAmt) + '$' : '—', '');
+  set('sGain', gainAmt > 0 ? '+' + f(gainAmt) + '$' : '—', 'g');
+  set('sRR',   rr > 0 ? '1:' + rr.toFixed(2) : '—', rr >= 2 ? 'g' : rr >= 1 ? 'y' : 'r');
+  set('sBE',   beWR > 0 ? (beWR*100).toFixed(1) + '%' : '—', wr >= beWR ? 'g' : 'r');
+  set('sExp',  exp !== 0 ? (exp >= 0 ? '+' : '') + f(exp) + '$' : '—', exp >= 0 ? 'g' : 'r');
+  set('sProj', proj !== 0 ? (proj >= 0 ? '+' : '') + f(proj) + '$' : '—', proj >= 0 ? 'g' : 'r');
+
+  // Alertes
+  const al = [];
+  if (riskPct*100 > 2) al.push('⚠ Risque > 2% : dangereux sur le long terme');
+  if (rr > 0 && rr < 1) al.push('⚠ R:R < 1:1 : tu risques plus que tu ne gagnes');
+  if (rr > 0 && wr < beWR) al.push('⚠ Win rate sous le break-even (' + (beWR*100).toFixed(0) + '%) → espérance négative');
+  if (exp < 0) al.push('⚠ Espérance négative : perd en moyenne sur le long terme');
+  const ab = document.getElementById('alertBox');
+  ab.innerHTML = al.join('<br>');
+  ab.className = 'alert' + (al.length ? ' show' : '');
+
+  // Cheat sheet
+  const slVals = [15, 30, 50, 75, 100, 150];
+  const tbody = document.getElementById('cheatBody');
+  tbody.innerHTML = '';
+  slVals.forEach(s => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${s}</td>`
+      + [0.005, 0.01, 0.02].map((r, i) => {
+          const l = (capital * r / (s * TICK)).toFixed(2);
+          return `<td class="${['tg','ty','tr'][i]}">${l}</td>`;
+        }).join('');
+    tbody.appendChild(tr);
+  });
+}
+
+function set(id, val, cls) {
+  const el = document.getElementById(id);
+  el.textContent = val;
+  el.className = 'stat-v' + (cls ? ' ' + cls : '');
+}
+
+function f(n) {
+  if (!isFinite(n)) return '—';
+  return new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(n);
+}
+
+syncRisk();
+</script>
+</body>
+</html>
